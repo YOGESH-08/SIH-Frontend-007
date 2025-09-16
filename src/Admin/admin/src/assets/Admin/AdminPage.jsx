@@ -34,6 +34,16 @@ export default function Dashboard() {
   const [claims, setClaims] = useState([]);
   const [volLoading, setVolLoading] = useState(false);
 
+  // Toasts
+  const [toasts, setToasts] = useState([]);
+  const showToast = (message, type = "info") => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
+
   const fetchCityIssues = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/admin/city-issues`, {
@@ -74,7 +84,10 @@ export default function Dashboard() {
     if (activeView === "acknowledged") handleFetchIssuesByType("acknowledged");
     if (activeView === "resolved") handleFetchIssuesByType("resolved");
     if (activeView === "issues") fetchCityIssues();
-    if (activeView === "volunteers") fetchVolunteerRequests();
+    if (activeView === "volunteerRequests") fetchVolunteerRequests();
+    if (activeView === "volunteers") {
+      /* no fetch needed, handled in ApprovedVolunteers */
+    }
     if (activeView === "claims") fetchClaims();
   }, [activeView]);
 
@@ -91,9 +104,10 @@ export default function Dashboard() {
       setIssues((prev) =>
         prev.map((issue) => (issue._id === id ? updatedIssue : issue))
       );
+      showToast(`Issue ${status} successfully`, "success");
     } catch (err) {
       console.error(err);
-      // alert("Error updating issue: " + err.message);
+      showToast("Error updating issue: " + err.message, "error");
     }
   };
 
@@ -128,6 +142,7 @@ export default function Dashboard() {
       setVolunteerRequests(data);
     } catch (e) {
       console.error(e);
+      showToast(e.message, "error");
     } finally {
       setVolLoading(false);
     }
@@ -147,8 +162,29 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update status");
       fetchVolunteerRequests();
+      showToast(`Request ${action}d`, "success");
     } catch (e) {
-      alert(e.message);
+      showToast(e.message, "error");
+    }
+  };
+
+  const updateVolunteerStatusWithReason = async (userId, action, reason) => {
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/volunteer/admin/requests/${userId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ action, reason }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+      fetchVolunteerRequests();
+      showToast(`Request ${action}ed`, "success");
+    } catch (e) {
+      showToast(e.message, "error");
     }
   };
 
@@ -163,6 +199,7 @@ export default function Dashboard() {
       setClaims(data);
     } catch (e) {
       console.error(e);
+      showToast(e.message, "error");
     } finally {
       setVolLoading(false);
     }
@@ -183,8 +220,11 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to review claim");
       fetchClaims();
+      // Refresh issues so resolved appears immediately in Issues view
+      fetchCityIssues();
+      showToast(`Claim ${action}d`, "success");
     } catch (e) {
-      alert(e.message);
+      showToast(e.message, "error");
     }
   };
 
@@ -337,46 +377,63 @@ export default function Dashboard() {
             </div>
           </div>
         );
-      case "volunteers":
+      case "volunteerRequests":
         return (
-          <div className="pending-content">
-            <h2>Volunteer Requests</h2>
+          <div className="pending-content volunteer-requests">
+            <div className="section-header">
+              <h2>
+                <i className="fa-solid fa-user-plus"></i> Volunteer Requests
+              </h2>
+              <div className="section-actions">
+                <button
+                  className="btn-refresh"
+                  onClick={fetchVolunteerRequests}
+                >
+                  <i className="fa-solid fa-rotate"></i> Refresh
+                </button>
+              </div>
+            </div>
             {volLoading ? (
               <p>Loading...</p>
             ) : volunteerRequests.length === 0 ? (
-              <p>No pending requests.</p>
+              <div className="empty-state">
+                <i className="fa-regular fa-circle-check"></i>
+                <p>No pending requests.</p>
+              </div>
             ) : (
               <div className="issues-list">
                 {volunteerRequests.map((u) => (
-                  <div key={u._id} className="issue-card">
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                      }}
-                    >
+                  <div key={u._id} className="issue-card volunteer-card">
+                    <div className="volunteer-head">
                       <div>
                         <strong>{u.fullName}</strong>
-                        <div style={{ fontSize: 12 }}>{u.email}</div>
-                        <div style={{ fontSize: 12 }}>
+                        <div className="muted">{u.email}</div>
+                        <div className="muted">
                           District: {u.volunteerDistrict}
                         </div>
                       </div>
-                      <div>
+                      <div className="request-actions">
                         <button
-                          className="btn-ack"
+                          className="btn btn-approve"
                           onClick={() =>
                             updateVolunteerStatus(u._id, "approve")
                           }
                         >
-                          Approve
+                          <i className="fa-solid fa-check"></i> Approve
                         </button>
                         <button
-                          className="btn-reject"
-                          onClick={() => updateVolunteerStatus(u._id, "reject")}
-                          style={{ marginLeft: 8 }}
+                          className="btn btn-reject-outline"
+                          onClick={() => {
+                            const reason =
+                              prompt("Reason for rejection?") || "";
+                            updateVolunteerStatusWithReason(
+                              u._id,
+                              "reject",
+                              reason
+                            );
+                          }}
                         >
-                          Reject
+                          <i className="fa-solid fa-xmark"></i> Reject
                         </button>
                       </div>
                     </div>
@@ -384,6 +441,21 @@ export default function Dashboard() {
                 ))}
               </div>
             )}
+          </div>
+        );
+      case "volunteers":
+        return (
+          <div className="pending-content approved-volunteers">
+            <div className="section-header">
+              <h2>
+                <i className="fa-solid fa-people-carry-box"></i> Approved
+                Volunteers
+              </h2>
+            </div>
+            <ApprovedVolunteers
+              BACKEND_URL={BACKEND_URL}
+              showToast={showToast}
+            />
           </div>
         );
       case "claims":
@@ -1466,6 +1538,31 @@ export default function Dashboard() {
     }
   };
 
+  const generateReport = async () => {
+    setReportLoading(true);
+    try {
+      const params = new URLSearchParams(reportFilters).toString();
+      const res = await fetch(
+        `${BACKEND_URL}/admin/generate-report?${params}`,
+        {
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to generate report");
+      const data = await res.json();
+      setReportData(data);
+      showToast("Report generated", "success");
+    } catch (err) {
+      showToast("Error generating report: " + err.message, "error");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const exportReportCSV = () => {
+    showToast("CSV export not implemented yet.", "info");
+  };
+
   return (
     <div className="app-container">
       {isMobile && (
@@ -1571,6 +1668,17 @@ export default function Dashboard() {
             <li>
               <a
                 className={`nav-link ${
+                  activeView === "volunteerRequests" ? "active" : ""
+                }`}
+                onClick={() => handleNavClick("volunteerRequests")}
+              >
+                <i className="fa-solid fa-user-plus"></i>
+                <span>Volunteer Requests</span>
+              </a>
+            </li>
+            <li>
+              <a
+                className={`nav-link ${
                   activeView === "volunteers" ? "active" : ""
                 }`}
                 onClick={() => handleNavClick("volunteers")}
@@ -1624,7 +1732,7 @@ export default function Dashboard() {
           </ul>
 
           {/* Logout Button */}
-          <div className="bottom-links" style={{ paddingTop: "120px" }}>
+          <div className="bottom-links">
             <a className="nav-link" href="#" onClick={handleLogout}>
               <i className="fa-solid fa-arrow-right-from-bracket"></i>
               <span>Sign out</span>
@@ -1643,6 +1751,14 @@ export default function Dashboard() {
       <main className="main">
         <div className="content-area">{renderContent()}</div>
       </main>
+      {/* Toasts */}
+      <div className="toast-container">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1878,6 +1994,80 @@ function IssueCard({ issue, onUpdateStatus, onShowOnMap }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ApprovedVolunteers({ BACKEND_URL, showToast }) {
+  const [list, setList] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BACKEND_URL}/volunteer/admin/volunteers`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load volunteers");
+      setList(data);
+    } catch (e) {
+      console.error(e);
+      showToast && showToast(e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  React.useEffect(() => {
+    load();
+  }, []);
+
+  const removeVolunteer = async (userId) => {
+    const reason = prompt("Reason for removal?") || "";
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/volunteer/admin/volunteers/${userId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ reason }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to remove volunteer");
+      load();
+      showToast && showToast("Volunteer removed", "success");
+    } catch (e) {
+      showToast && showToast(e.message, "error");
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (list.length === 0) return <p>No approved volunteers.</p>;
+  return (
+    <div className="issues-list">
+      {list.map((v) => (
+        <div key={v._id} className="issue-card volunteer-card">
+          <div className="volunteer-head">
+            <div>
+              <strong>{v.fullName}</strong>
+              <div className="muted">{v.email}</div>
+              <div className="muted">District: {v.volunteerDistrict}</div>
+              <span className="badge points">
+                <i className="fa-solid fa-star"></i> {v.volunteerPoints} pts
+              </span>
+            </div>
+            <div className="request-actions">
+              <button
+                className="btn btn-danger-outline"
+                onClick={() => removeVolunteer(v._id)}
+              >
+                <i className="fa-solid fa-trash"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

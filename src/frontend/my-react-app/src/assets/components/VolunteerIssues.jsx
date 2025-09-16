@@ -139,6 +139,25 @@ export default function VolunteerIssues() {
       <div style={{ padding: 20 }}>
         <h2>Volunteer Program</h2>
         <p>Your request was rejected. You may try again later.</p>
+        {status.volunteerRejectionReason && (
+          <p style={{ color: "#ff9800" }}>
+            Reason: {status.volunteerRejectionReason}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (status.volunteerStatus === "removed") {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>Volunteer Program</h2>
+        <p>Your volunteer access was removed.</p>
+        {status.volunteerRemovalReason && (
+          <p style={{ color: "#ff9800" }}>
+            Reason: {status.volunteerRemovalReason}
+          </p>
+        )}
       </div>
     );
   }
