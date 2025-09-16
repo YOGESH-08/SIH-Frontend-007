@@ -1,0 +1,274 @@
+body {
+  background-color: rgb(0, 0, 0);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.home-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 40px 20px;
+  gap: 30px;
+  position: relative;
+  flex-direction: column;
+}
+
+.home-section h4 {
+  color: white;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.home-section h1 {
+  color: white;
+  margin: 10px 0;
+}
+
+.home-section p {
+  color: white;
+}
+
+/* Left content */
+.home-left {
+  width: 100%;
+  position: relative;
+  align-self: flex-start;
+  height: fit-content;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* Sub heading */
+.sub-heading {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+/* Main heading */
+.main-heading {
+  font-size: 36px;
+  font-weight: 600;
+  margin: 15px 0;
+  color: #fff;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #ddd;
+  margin-top: 15px;
+}
+  
+/* Right side cards */
+.home-right {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Cards */
+.service-card {
+  background: #111;
+  color: #fff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Card number */
+.card-number {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+/* Title */
+.card-title {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* Text */
+.card-text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #ddd;
+}
+
+/* Card colors */
+.card1 {
+  background-color: #f0180daa;
+  position: sticky;
+  top:100px;
+  z-index: 1;
+}
+
+.card2 {
+  background-color: #0896a0;
+  position: sticky;
+  top:100px;
+  z-index: 2;
+}
+
+.card3 {
+  background-color: #0443ef;
+  position: sticky;
+  top:100px;
+  z-index: 3;
+}
+
+.card4 {
+  background-color: #42bd7d;
+  position: sticky;
+  top:100px;
+  z-index: 4;
+}
+
+/* Image Section */
+.home-img {
+  position: relative;
+  width: 100%;
+  height: 50vh;
+  margin-top: 50px;
+  z-index: 10;
+}
+
+.home-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0.15;
+}
+
+/* Desktop-only line breaks */
+.desktop-only {
+  display: none;
+}
+
+/* Tablet Styles */
+@media (min-width: 768px) {
+  .home-section {
+    padding: 50px 40px;
+    flex-direction: row;
+  }
+  
+  .home-left {
+    width: 45%;
+    text-align: left;
+    position: sticky;
+    top: 100px;
+    margin-bottom: 0;
+  }
+  
+  .home-right {
+    width: 50%;
+    gap: 40px;
+  }
+  
+  .main-heading {
+    font-size: 42px;
+  }
+  
+  .description {
+    font-size: 18px;
+  }
+  
+  .service-card {
+    padding: 40px;
+    min-height: 280px;
+  }
+  
+  .card-title {
+    font-size: 28px;
+  }
+  
+  .card-text {
+    font-size: 18px;
+  }
+  
+  .home-img {
+    height: 70vh;
+  }
+  
+  .desktop-only {
+    display: inline;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+  .home-section {
+    padding: 60px;
+    gap: 50px;
+  }
+  
+  .home-section h4 {
+    font-size: 45px;
+  }
+  
+  .main-heading {
+    font-size: 48px;
+  }
+  
+  .description {
+    font-size: 20px;
+  }
+  
+  .service-card {
+    padding: 60px;
+    min-height: 350px;
+    margin-bottom: 0;
+  }
+  
+  .card-number {
+    font-size: 28px;
+  }
+  
+  .card-title {
+    font-size: 36px;
+  }
+  
+  .card-text {
+    font-size: 22px;
+  }
+  
+  .home-img {
+    height: 100vh;
+    margin-top: 100px;
+  }
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1440px) {
+  .home-section {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* Mobile landscape optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .home-img {
+    height: 100vh;
+  }
+}
+
+/* High-resolution displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .service-card {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  }
+}
